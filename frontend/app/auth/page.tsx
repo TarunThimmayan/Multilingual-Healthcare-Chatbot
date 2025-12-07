@@ -269,26 +269,26 @@ export default function AuthExperience() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_15%,rgba(16,185,129,0.55),transparent_55%),radial-gradient(circle_at_85%_5%,rgba(34,197,94,0.4),transparent_55%),linear-gradient(180deg,rgba(2,6,23,0.92),rgba(2,6,23,0.95))]" />
-      <div className="relative z-10 px-4 py-10 sm:px-8 md:px-12 lg:px-16">
-        <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-10">
-        <header className="flex w-full flex-col items-center gap-3 text-center">
-          <div className="flex items-center gap-3 rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm font-semibold uppercase tracking-[0.32em] text-teal-100 shadow-lg shadow-teal-500/10">
-            <ShieldCheck className="h-4 w-4" aria-hidden />
+      <div className="relative z-10 px-4 py-4 sm:px-6 sm:py-6 md:px-12 md:py-10 lg:px-16">
+        <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-4 sm:gap-6 md:gap-8 lg:gap-10">
+        <header className="flex w-full flex-col items-center gap-2 sm:gap-3 text-center">
+          <div className="flex items-center gap-2 sm:gap-3 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 sm:px-5 sm:py-2 text-xs sm:text-sm font-semibold uppercase tracking-[0.28em] sm:tracking-[0.32em] text-teal-100 shadow-lg shadow-teal-500/10">
+            <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />
             SafeCare Companion
           </div>
-          <div className="space-y-3">
-            <h1 className="text-3xl font-semibold text-white sm:text-4xl md:text-5xl">Welcome to your trusted care partner</h1>
-            <p className="max-w-2xl text-sm text-slate-300 sm:text-base">
+          <div className="space-y-2 sm:space-y-3">
+            <h1 className="text-2xl font-semibold text-white sm:text-3xl md:text-4xl lg:text-5xl px-2">Welcome to your trusted care partner</h1>
+            <p className="max-w-2xl text-xs text-slate-300 sm:text-sm md:text-base px-2">
               Create a secure account or return to continue your personalised health guidance. We combine empathetic support with clinical accuracy—always on your side.
             </p>
           </div>
         </header>
 
         <main className="relative w-full">
-          <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-white/10 shadow-[0_35px_120px_rgba(15,23,42,0.55)]">
+          <div className="relative overflow-visible sm:overflow-hidden rounded-2xl sm:rounded-3xl border border-white/20 bg-white/10 shadow-[0_35px_120px_rgba(15,23,42,0.55)]">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.12),_transparent_55%),radial-gradient(circle_at_bottom,_rgba(34,197,94,0.12),_transparent_55%)]" aria-hidden />
             <div className="relative grid gap-0 md:grid-cols-2">
-              <section className="hidden md:flex flex-col justify-between border-r border-white/10 bg-white/10 p-10 text-slate-100">
+              <section className="hidden md:flex flex-col justify-between border-r border-white/10 bg-white/10 p-8 lg:p-10 text-slate-100">
                 <div className="space-y-6">
                   <p className="text-sm uppercase tracking-[0.28em] text-teal-100/80">Why people choose us</p>
                   <ul className="space-y-4 text-sm text-slate-200">
@@ -326,32 +326,25 @@ export default function AuthExperience() {
                 </footer>
               </section>
 
-              <section className="relative flex w-full flex-col bg-slate-900/80 px-6 py-8 sm:px-8 md:px-10 md:py-12">
-                <div className="mb-6 flex items-center justify-between text-slate-200">
-                  <div className="flex items-center gap-2 rounded-full border border-white/10 bg-slate-900/60 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.28em] text-teal-200/80">
-                    <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-emerald-300" aria-hidden />
+              <section className="relative z-10 flex w-full flex-col bg-slate-900/90 sm:bg-slate-900/80 px-4 pt-4 pb-0 sm:px-6 sm:pt-6 sm:pb-6 md:px-10 md:pt-12 md:pb-12 overflow-hidden sm:overflow-visible">
+                <div className="mb-4 sm:mb-6 flex items-center text-slate-200">
+                  <div className="flex items-center gap-2 rounded-full border border-white/10 bg-slate-900/60 px-3 py-1.5 sm:px-4 text-[0.65rem] sm:text-xs font-semibold uppercase tracking-[0.24em] sm:tracking-[0.28em] text-teal-200/80">
+                    <span className="inline-flex h-1.5 w-1.5 sm:h-2 sm:w-2 animate-pulse rounded-full bg-emerald-300" aria-hidden />
                     {mode === 'signup' ? 'Create account' : 'Welcome back'}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleModeSwitch(mode === 'signup' ? 'login' : 'signup')}
-                    className="text-xs font-semibold text-teal-200 transition hover:text-white"
-                  >
-                    {mode === 'signup' ? 'Have an account? Log in' : "Need an account? Let's sign up"}
-                  </button>
                 </div>
 
-                <div className="relative min-h-[520px] overflow-y-auto overflow-x-hidden">
+                <div className="relative z-10 overflow-visible sm:overflow-y-auto sm:overflow-x-hidden pb-0 mb-0 -mb-24 sm:mb-0">
                   <div
                     className={clsx(
-                      'absolute inset-0 transition-all duration-500 ease-out',
+                      'relative sm:absolute sm:inset-0 transition-all duration-500 ease-out',
                       mode === 'signup'
                         ? 'translate-x-0 opacity-100'
-                        : 'pointer-events-none translate-x-6 opacity-0'
+                        : 'pointer-events-none translate-x-6 opacity-0 sm:translate-x-6'
                     )}
                   >
-                    <form className="space-y-6" onSubmit={handleSignUpSubmit} noValidate>
-                      <div className="space-y-5">
+                    <form className="space-y-3 sm:space-y-4 md:space-y-6 mb-0 pb-0 -mb-12 sm:mb-0 sm:pb-0" onSubmit={handleSignUpSubmit} noValidate>
+                      <div className="space-y-3 sm:space-y-4 md:space-y-5">
                         <FloatingField
                           id="signup-fullName"
                           label="Full Name"
@@ -396,19 +389,19 @@ export default function AuthExperience() {
                         type="submit"
                         disabled={loading}
                         className={clsx(
-                          'group relative flex w-full items-center justify-center gap-3 rounded-lg bg-gradient-to-r px-8 py-5 text-lg font-bold text-white shadow-lg shadow-emerald-500/40 transition hover:scale-[1.01] hover:shadow-xl hover:shadow-emerald-500/50 disabled:cursor-not-allowed disabled:opacity-60',
+                          'group relative flex w-full items-center justify-center gap-2 sm:gap-3 rounded-lg bg-gradient-to-r px-6 py-2.5 sm:px-8 sm:py-5 text-base sm:text-lg font-bold text-white shadow-lg shadow-emerald-500/40 transition hover:scale-[1.01] hover:shadow-xl hover:shadow-emerald-500/50 disabled:cursor-not-allowed disabled:opacity-60 mb-0 sm:mb-0',
                           'from-emerald-500 via-green-500 to-teal-500'
                         )}
                         ref={signUpButtonRef}
                       >
                         {loading ? (
                           <>
-                            <Loader2 className="h-6 w-6 animate-spin" aria-hidden />
+                            <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" aria-hidden />
                             <span>Signing up...</span>
                           </>
                         ) : (
                           <>
-                            <Sparkles className="h-6 w-6" aria-hidden />
+                            <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden />
                             <span>Sign up</span>
                           </>
                         )}
@@ -418,13 +411,13 @@ export default function AuthExperience() {
 
                   <div
                     className={clsx(
-                      'absolute inset-0 transition-all duration-500 ease-out',
+                      'relative sm:absolute sm:inset-0 transition-all duration-500 ease-out',
                       mode === 'login'
                         ? 'translate-x-0 opacity-100'
-                        : 'pointer-events-none -translate-x-6 opacity-0'
+                        : 'pointer-events-none -translate-x-6 opacity-0 sm:-translate-x-6'
                     )}
                   >
-                    <form className="space-y-6" onSubmit={handleLoginSubmit} noValidate>
+                    <form className="space-y-3 sm:space-y-4 md:space-y-6" onSubmit={handleLoginSubmit} noValidate>
                       <FloatingField
                         id="login-email"
                         label="Email address"
@@ -445,7 +438,7 @@ export default function AuthExperience() {
                       />
 
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <label className="flex items-center gap-3 text-sm text-slate-200">
+                        <label className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-slate-200">
                           <input
                             type="checkbox"
                             checked={loginForm.remember}
@@ -456,7 +449,7 @@ export default function AuthExperience() {
                         </label>
                         <button
                           type="button"
-                          className="text-sm font-semibold text-emerald-200 transition hover:text-white"
+                          className="text-xs sm:text-sm font-semibold text-emerald-200 transition hover:text-white text-left sm:text-right"
                         >
                           Forgot password?
                         </button>
@@ -466,18 +459,18 @@ export default function AuthExperience() {
                         type="submit"
                         disabled={loading}
                         className={clsx(
-                          'group relative mt-6 flex w-full items-center justify-center gap-3 rounded-lg bg-gradient-to-r px-8 py-5 text-lg font-bold text-white shadow-lg shadow-emerald-500/40 transition hover:scale-[1.01] hover:shadow-xl hover:shadow-emerald-500/50 disabled:cursor-not-allowed disabled:opacity-60',
+                          'group relative mt-3 sm:mt-4 md:mt-6 flex w-full items-center justify-center gap-2 sm:gap-3 rounded-lg bg-gradient-to-r px-6 py-4 sm:px-8 sm:py-5 text-base sm:text-lg font-bold text-white shadow-lg shadow-emerald-500/40 transition hover:scale-[1.01] hover:shadow-xl hover:shadow-emerald-500/50 disabled:cursor-not-allowed disabled:opacity-60',
                           'from-emerald-500 via-green-500 to-teal-500'
                         )}
                       >
                         {loading ? (
                           <>
-                            <Loader2 className="h-6 w-6 animate-spin" aria-hidden />
+                            <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" aria-hidden />
                             <span>Signing in...</span>
                           </>
                         ) : (
                           <>
-                            <ShieldCheck className="h-6 w-6" aria-hidden />
+                            <ShieldCheck className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden />
                             <span>Sign in</span>
                           </>
                         )}
@@ -486,27 +479,35 @@ export default function AuthExperience() {
                   </div>
                 </div>
 
-                <div className="mt-8 flex flex-col items-center gap-2 text-center">
-                  <p className="text-xs text-slate-400">Your information is encrypted and stays confidential.</p>
-                  <div className="text-sm text-slate-200">
+                <div className="-mt-28 sm:mt-6 md:mt-8 flex flex-col items-center gap-0.5 sm:gap-2 text-center px-2 pb-2 sm:pb-0 relative z-20">
+                  <p className="text-[0.7rem] sm:text-xs text-slate-400 leading-tight">Your information is encrypted and stays confidential.</p>
+                  <div className="text-xs sm:text-sm text-slate-200 leading-tight">
                     {mode === 'signup' ? (
                       <>
                         Already have an account?{' '}
                         <button
                           type="button"
-                          onClick={() => handleModeSwitch('login')}
-                          className="font-semibold text-teal-200 transition hover:text-white"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleModeSwitch('login');
+                          }}
+                          className="font-semibold text-teal-200 transition hover:text-white relative z-30"
                         >
                           Log in
                         </button>
                       </>
                     ) : (
                       <>
-                        Don’t have an account?{' '}
+                        Don't have an account?{' '}
                         <button
                           type="button"
-                          onClick={() => handleModeSwitch('signup')}
-                          className="font-semibold text-teal-200 transition hover:text-white"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleModeSwitch('signup');
+                          }}
+                          className="font-semibold text-teal-200 transition hover:text-white relative z-30"
                         >
                           Sign up
                         </button>
@@ -550,8 +551,8 @@ function FloatingField({ id, label, value, placeholder, onChange, type = 'text',
           placeholder=" "
           onChange={(event) => onChange(event.target.value)}
           className={clsx(
-            'peer block w-full rounded-2xl border bg-white/80 px-4 py-3 text-sm font-medium text-slate-900 shadow-inner shadow-black/10 transition-all duration-200 placeholder-transparent',
-            'focus:border-teal-400 focus:bg-white focus:shadow-lg focus:shadow-teal-500/15 focus:outline-none focus:ring-4 focus:ring-teal-200/40',
+            'peer block w-full rounded-xl sm:rounded-2xl border bg-white/80 px-3 py-2.5 sm:px-4 sm:py-3 text-sm font-medium text-slate-900 shadow-inner shadow-black/10 transition-all duration-200 placeholder-transparent',
+            'focus:border-teal-400 focus:bg-white focus:shadow-lg focus:shadow-teal-500/15 focus:outline-none focus:ring-2 sm:focus:ring-4 focus:ring-teal-200/40',
             error ? 'border-rose-300 ring-rose-200/40 focus:border-rose-400 focus:ring-rose-200/50' : 'border-slate-200'
           )}
           aria-describedby={describedBy}
@@ -560,25 +561,25 @@ function FloatingField({ id, label, value, placeholder, onChange, type = 'text',
         <label
           htmlFor={id}
           className={clsx(
-            'pointer-events-none absolute left-4 top-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 transition-all duration-200',
-            'peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-[0.7rem] peer-placeholder-shown:uppercase peer-placeholder-shown:tracking-[0.25em] peer-placeholder-shown:text-slate-400/80',
-            hasValue && '-translate-y-2 text-[0.6rem] text-teal-500',
-            'peer-focus:-translate-y-2 peer-focus:text-[0.6rem] peer-focus:text-teal-400'
+            'pointer-events-none absolute left-3 sm:left-4 top-2.5 sm:top-3 text-[0.65rem] sm:text-xs font-semibold uppercase tracking-[0.18em] sm:tracking-[0.2em] text-slate-400 transition-all duration-200',
+            'peer-placeholder-shown:top-3 sm:peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-[0.65rem] sm:peer-placeholder-shown:text-[0.7rem] peer-placeholder-shown:uppercase peer-placeholder-shown:tracking-[0.22em] sm:peer-placeholder-shown:tracking-[0.25em] peer-placeholder-shown:text-slate-400/80',
+            hasValue && '-translate-y-2 text-[0.55rem] sm:text-[0.6rem] text-teal-500',
+            'peer-focus:-translate-y-2 peer-focus:text-[0.55rem] sm:peer-focus:text-[0.6rem] peer-focus:text-teal-400'
           )}
         >
           {label}
         </label>
       </div>
-      <div className="min-h-[20px]">
+      <div className="min-h-[18px] sm:min-h-[20px]">
         {error ? (
-          <p id={describedBy} className="flex items-center gap-2 text-xs font-medium text-rose-200">
-            <XCircle className="h-3.5 w-3.5" aria-hidden />
-            {error}
+          <p id={describedBy} className="flex items-start gap-1.5 sm:gap-2 text-[0.7rem] sm:text-xs font-medium text-rose-200 leading-relaxed">
+            <XCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0 mt-0.5" aria-hidden />
+            <span>{error}</span>
           </p>
         ) : (
           hasValue && (
-            <p className="flex items-center gap-2 text-xs font-medium text-emerald-200">
-              <Check className="h-3.5 w-3.5" aria-hidden />
+            <p className="flex items-center gap-1.5 sm:gap-2 text-[0.7rem] sm:text-xs font-medium text-emerald-200">
+              <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" aria-hidden />
               Looks great!
             </p>
           )
@@ -599,12 +600,12 @@ function PasswordStrengthBar({ score, password }: PasswordStrengthBarProps) {
   const label = password ? passwordStrengthLabels[Math.max(0, score - 1)] ?? 'Very Weak' : 'Start typing to check strength';
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between text-xs text-slate-300">
+    <div className="space-y-1.5 sm:space-y-2">
+      <div className="flex items-center justify-between text-[0.7rem] sm:text-xs text-slate-300">
         <span>Password strength</span>
-        <span className="font-semibold text-teal-200/80">{label}</span>
+        <span className="font-semibold text-teal-200/80 text-[0.7rem] sm:text-xs">{label}</span>
       </div>
-      <div className="flex gap-1">
+      <div className="flex gap-0.5 sm:gap-1">
         {Array.from({ length: segments }).map((_, index) => (
           <span
             key={`segment-${index}`}
@@ -630,21 +631,21 @@ interface ToastContainerProps {
 
 function ToastContainer({ toasts, renderIcon }: ToastContainerProps) {
   return (
-    <div className="pointer-events-none fixed inset-x-4 bottom-6 z-50 mx-auto flex max-w-md flex-col gap-3 sm:inset-x-auto sm:right-6 sm:top-6 sm:bottom-auto">
+    <div className="pointer-events-none fixed inset-x-3 bottom-4 z-50 mx-auto flex max-w-md flex-col gap-2 sm:gap-3 sm:inset-x-4 sm:bottom-6 sm:inset-x-auto sm:right-6 sm:top-6 sm:bottom-auto">
       {toasts.map((toast) => (
         <div
           key={toast.id}
           className={clsx(
-            'pointer-events-auto flex items-center gap-3 rounded-2xl border border-white/20 bg-white/90 px-4 py-3 text-sm font-medium shadow-lg shadow-slate-900/30 backdrop-blur',
+            'pointer-events-auto flex items-center gap-2 sm:gap-3 rounded-xl sm:rounded-2xl border border-white/20 bg-white/90 px-3 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm font-medium shadow-lg shadow-slate-900/30 backdrop-blur',
             toast.variant === 'success' && 'text-emerald-700',
             toast.variant === 'error' && 'text-rose-700',
             toast.variant === 'info' && 'text-emerald-700'
           )}
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 via-green-400 to-teal-500 text-white shadow-lg shadow-emerald-400/30">
+          <span className="flex h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 via-green-400 to-teal-500 text-white shadow-lg shadow-emerald-400/30">
             {renderIcon(toast.variant)}
           </span>
-          <p className="flex-1 text-left text-sm leading-relaxed">{toast.message}</p>
+          <p className="flex-1 text-left text-xs sm:text-sm leading-relaxed">{toast.message}</p>
         </div>
       ))}
     </div>
