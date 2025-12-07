@@ -210,9 +210,9 @@ export default function LandingPage() {
 
       <header className="sticky top-0 z-50 border-b border-white/5 bg-slate-900/60 backdrop-blur-xl">
         <div className="mx-auto w-full max-w-6xl px-4 py-4 sm:px-6 sm:py-5 md:py-6 lg:px-10">
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+          <div className="flex items-center justify-between gap-4 md:grid md:grid-cols-[1fr_auto_1fr]">
             {/* Left: Logo + Branding - Always at extreme left */}
-            <div className="flex items-center justify-start gap-2 sm:gap-3">
+            <div className="flex items-center justify-start gap-2 sm:gap-3 flex-shrink-0">
               <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500 text-sm font-semibold text-white shadow-[0_15px_35px_rgba(16,185,129,0.35)] sm:h-10 sm:w-10 sm:text-lg">
                 <svg
                   className="h-5 w-5 sm:h-6 sm:w-6"
@@ -236,7 +236,7 @@ export default function LandingPage() {
               </div>
             </div>
             
-            {/* Center: Navigation Links - Always centered */}
+            {/* Center: Navigation Links - Always centered (hidden on mobile) */}
             <nav className="hidden items-center justify-center gap-4 text-xs text-slate-200 md:flex md:gap-6 md:text-sm lg:gap-8">
               <NavLink
                 href="#features"
@@ -265,7 +265,7 @@ export default function LandingPage() {
             </nav>
             
             {/* Right: Action Buttons - Always at extreme right */}
-            <div className="flex items-center justify-end gap-2 sm:gap-3">
+            <div className="flex items-center justify-end gap-2 sm:gap-3 flex-shrink-0 ml-auto md:ml-0">
               <NavLink
                 href="#insights"
                 className="hidden rounded-full border border-white/10 px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:border-emerald-400/50 hover:text-emerald-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400 sm:inline-flex sm:px-4 sm:py-2 sm:text-sm whitespace-nowrap"

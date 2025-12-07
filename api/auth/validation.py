@@ -327,8 +327,9 @@ def validate_chat_input(text: str) -> str:
         r"GROUP\s+BY\s+\d+",
         r"ORDER\s+BY\s+.*?\(",
         
-        # HAVING clause injection
-        r"\bHAVING\s+.*?\s+(OR|AND)\s+",
+        # HAVING clause injection - only match in SQL context (after GROUP BY or in SQL query structure)
+        # Require SQL keywords before HAVING to avoid false positives with natural language "having"
+        r"\b(GROUP\s+BY|SELECT.*?FROM)\s+.*?\bHAVING\s+.*?\s+(OR|AND)\s+",
     ]
     
     for pattern in chat_sql_patterns:
