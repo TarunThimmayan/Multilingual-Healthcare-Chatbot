@@ -111,12 +111,18 @@ const LightRays: React.FC<LightRaysProps> = ({
   useEffect(() => {
     if (!containerRef.current) return;
 
+    // For mobile, set visible immediately to ensure animation starts
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      setIsVisible(true);
+    }
+
     observerRef.current = new IntersectionObserver(
       entries => {
         const entry = entries[0];
         setIsVisible(entry.isIntersecting);
       },
-      { threshold: 0.1 }
+      { threshold: 0.1, rootMargin: '50px' }
     );
 
     observerRef.current.observe(containerRef.current);
@@ -138,31 +144,87 @@ const LightRays: React.FC<LightRaysProps> = ({
     }
 
     const initializeWebGL = async () => {
-      if (!containerRef.current) return;
-
-      await new Promise(resolve => setTimeout(resolve, 10));
-
-      if (!containerRef.current) return;
-
-      const renderer = new Renderer({
-        dpr: Math.min(window.devicePixelRatio, 2),
-        alpha: true
-      });
-
-      rendererRef.current = renderer;
-
-      const gl = renderer.gl;
-
-      gl.canvas.style.width = '100%';
-      gl.canvas.style.height = '100%';
-
-      while (containerRef.current.firstChild) {
-        containerRef.current.removeChild(containerRef.current.firstChild);
+      if (!containerRef.current) {
+        console.warn('LightRays: Container ref not available');
+        return;
       }
 
-      containerRef.current.appendChild(gl.canvas);
+      // Defer WebGL initialization significantly to prioritize content rendering
+      // Use requestIdleCallback for better performance
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        await new Promise(resolve => {
+          requestIdleCallback(() => resolve(undefined), { timeout: 2000 });
+        });
+      } else {
+        await new Promise(resolve => setTimeout(resolve, 800));
+      }
 
-      const vert = `
+      if (!containerRef.current) return;
+
+      // Ensure container has dimensions
+      const rect = containerRef.current.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) {
+        console.warn('LightRays: Container has no dimensions', rect);
+        // Retry after a short delay
+        setTimeout(() => initializeWebGL(), 100);
+        return;
+      }
+
+      // Check WebGL support
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (!gl) {
+        console.warn('WebGL not supported, LightRays animation will not be visible');
+        // Add a CSS fallback animation
+        if (containerRef.current) {
+          containerRef.current.style.background = 'radial-gradient(circle at top center, rgba(0, 255, 255, 0.4), transparent 70%)';
+          containerRef.current.style.animation = 'pulse 3s ease-in-out infinite';
+        }
+        return;
+      }
+
+      console.log('LightRays: WebGL supported, initializing...');
+
+      try {
+        // Detect mobile device
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        
+        const renderer = new Renderer({
+          dpr: isMobile ? Math.min(window.devicePixelRatio, 1.5) : Math.min(window.devicePixelRatio, 2),
+          alpha: true,
+          powerPreference: isMobile ? 'default' : 'high-performance',
+          antialias: !isMobile // Disable antialiasing on mobile for better performance
+        });
+
+        rendererRef.current = renderer;
+
+        const rendererGl = renderer.gl;
+
+        // Ensure canvas has proper dimensions and is visible
+        rendererGl.canvas.style.width = '100%';
+        rendererGl.canvas.style.height = '100%';
+        rendererGl.canvas.style.display = 'block';
+        rendererGl.canvas.style.position = 'absolute';
+        rendererGl.canvas.style.top = '0';
+        rendererGl.canvas.style.left = '0';
+        rendererGl.canvas.style.opacity = '1';
+        rendererGl.canvas.style.visibility = 'visible';
+        rendererGl.canvas.style.zIndex = '1';
+        // Critical: Disable pointer events so clicks pass through to buttons
+        rendererGl.canvas.style.pointerEvents = 'none';
+        rendererGl.canvas.style.touchAction = 'none';
+        
+        // Enable blending for better visibility
+        rendererGl.enable(rendererGl.BLEND);
+        rendererGl.blendFunc(rendererGl.SRC_ALPHA, rendererGl.ONE_MINUS_SRC_ALPHA);
+
+        while (containerRef.current.firstChild) {
+          containerRef.current.removeChild(containerRef.current.firstChild);
+        }
+
+        containerRef.current.appendChild(rendererGl.canvas);
+
+        const vert = `
 attribute vec2 position;
 varying vec2 vUv;
 
@@ -171,7 +233,7 @@ void main() {
   gl_Position = vec4(position, 0.0, 1.0);
 }`;
 
-      const frag = `precision highp float;
+        const frag = `precision highp float;
 
 uniform float iTime;
 uniform vec2  iResolution;
@@ -238,14 +300,19 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     fragColor.rgb *= (1.0 - noiseAmount + noiseAmount * n);
   }
   float brightness = 1.0 - (coord.y / iResolution.y);
-  fragColor.x *= 0.1 + brightness * 0.8;
-  fragColor.y *= 0.3 + brightness * 0.6;
-  fragColor.z *= 0.5 + brightness * 0.5;
+  // Increased brightness multipliers for better visibility on mobile
+  fragColor.x *= 0.3 + brightness * 0.9;
+  fragColor.y *= 0.5 + brightness * 0.8;
+  fragColor.z *= 0.7 + brightness * 0.7;
+  // Boost overall intensity for mobile visibility
+  fragColor.rgb *= 1.5;
   if (saturation != 1.0) {
     float gray = dot(fragColor.rgb, vec3(0.299, 0.587, 0.114));
     fragColor.rgb = mix(vec3(gray), fragColor.rgb, saturation);
   }
   fragColor.rgb *= raysColor;
+  // Ensure minimum visibility
+  fragColor.a = max(fragColor.a, 0.3);
 }
 
 void main() {
@@ -254,105 +321,135 @@ void main() {
   gl_FragColor  = color;
 }`;
 
-      const uniforms: Uniforms = {
-        iTime: { value: 0 },
-        iResolution: { value: [1, 1] },
-        rayPos: { value: [0, 0] },
-        rayDir: { value: [0, 1] },
-        raysColor: { value: hexToRgb(raysColor) },
-        raysSpeed: { value: raysSpeed },
-        lightSpread: { value: lightSpread },
-        rayLength: { value: rayLength },
-        pulsating: { value: pulsating ? 1.0 : 0.0 },
-        fadeDistance: { value: fadeDistance },
-        saturation: { value: saturation },
-        mousePos: { value: [0.5, 0.5] },
-        mouseInfluence: { value: mouseInfluence },
-        noiseAmount: { value: noiseAmount },
-        distortion: { value: distortion }
-      };
+        const uniforms: Uniforms = {
+          iTime: { value: 0 },
+          iResolution: { value: [1, 1] },
+          rayPos: { value: [0, 0] },
+          rayDir: { value: [0, 1] },
+          raysColor: { value: hexToRgb(raysColor) },
+          raysSpeed: { value: raysSpeed },
+          lightSpread: { value: lightSpread },
+          rayLength: { value: rayLength },
+          pulsating: { value: pulsating ? 1.0 : 0.0 },
+          fadeDistance: { value: fadeDistance },
+          saturation: { value: saturation },
+          mousePos: { value: [0.5, 0.5] },
+          mouseInfluence: { value: mouseInfluence },
+          noiseAmount: { value: noiseAmount },
+          distortion: { value: distortion }
+        };
 
-      uniformsRef.current = uniforms;
+        uniformsRef.current = uniforms;
 
-      const geometry = new Triangle(gl);
-      const program = new Program(gl, {
-        vertex: vert,
-        fragment: frag,
-        uniforms
-      });
+        const geometry = new Triangle(rendererGl);
+        const program = new Program(rendererGl, {
+          vertex: vert,
+          fragment: frag,
+          uniforms
+        });
 
-      const mesh = new Mesh(gl, { geometry, program });
+        const mesh = new Mesh(rendererGl, { geometry, program });
 
-      meshRef.current = mesh;
+        meshRef.current = mesh;
 
-      const updatePlacement = () => {
-        if (!containerRef.current || !renderer) return;
-        renderer.dpr = Math.min(window.devicePixelRatio, 2);
-        const { clientWidth: wCSS, clientHeight: hCSS } = containerRef.current;
-        renderer.setSize(wCSS, hCSS);
-        const dpr = renderer.dpr;
-        const w = wCSS * dpr;
-        const h = hCSS * dpr;
-        uniforms.iResolution.value = [w, h];
-        const { anchor, dir } = getAnchorAndDir(raysOrigin, w, h);
-        uniforms.rayPos.value = anchor;
-        uniforms.rayDir.value = dir;
-      };
-
-      const loop = (t: number) => {
-        if (!rendererRef.current || !uniformsRef.current || !meshRef.current) {
-          return;
-        }
-
-        uniforms.iTime.value = t * 0.001;
-
-        if (followMouse && mouseInfluence > 0.0) {
-          const smoothing = 0.92;
-          smoothMouseRef.current.x = smoothMouseRef.current.x * smoothing + mouseRef.current.x * (1 - smoothing);
-          smoothMouseRef.current.y = smoothMouseRef.current.y * smoothing + mouseRef.current.y * (1 - smoothing);
-          uniforms.mousePos.value = [smoothMouseRef.current.x, smoothMouseRef.current.y];
-        }
-
-        try {
-          renderer.render({ scene: mesh });
-          animationIdRef.current = requestAnimationFrame(loop);
-        } catch (error) {
-          console.warn('WebGL rendering error:', error);
-          return;
-        }
-      };
-
-      window.addEventListener('resize', updatePlacement);
-      updatePlacement();
-      animationIdRef.current = requestAnimationFrame(loop);
-
-      cleanupFunctionRef.current = () => {
-        if (animationIdRef.current) {
-          cancelAnimationFrame(animationIdRef.current);
-          animationIdRef.current = null;
-        }
-
-        window.removeEventListener('resize', updatePlacement);
-
-        if (renderer) {
-          try {
-            const canvas = renderer.gl.canvas;
-            const loseContextExt = renderer.gl.getExtension('WEBGL_lose_context');
-            if (loseContextExt) {
-              loseContextExt.loseContext();
-            }
-            if (canvas && canvas.parentNode) {
-              canvas.parentNode.removeChild(canvas);
-            }
-          } catch (error) {
-            console.warn('Error during WebGL cleanup:', error);
+        const updatePlacement = () => {
+          if (!containerRef.current || !renderer) return;
+          renderer.dpr = Math.min(window.devicePixelRatio, 2);
+          const rect = containerRef.current.getBoundingClientRect();
+          const wCSS = rect.width || containerRef.current.clientWidth;
+          const hCSS = rect.height || containerRef.current.clientHeight;
+          // Ensure minimum dimensions for mobile
+          const width = Math.max(wCSS, 100);
+          const height = Math.max(hCSS, 100);
+          
+          if (width === 0 || height === 0) {
+            console.warn('LightRays: Container dimensions are zero', { width, height, rect });
+            return;
           }
-        }
+          
+          renderer.setSize(width, height);
+          const dpr = renderer.dpr;
+          const w = width * dpr;
+          const h = height * dpr;
+          uniforms.iResolution.value = [w, h];
+          const { anchor, dir } = getAnchorAndDir(raysOrigin, w, h);
+          uniforms.rayPos.value = anchor;
+          uniforms.rayDir.value = dir;
+        };
 
-        rendererRef.current = null;
-        uniformsRef.current = null;
-        meshRef.current = null;
-      };
+        const loop = (t: number) => {
+          if (!rendererRef.current || !uniformsRef.current || !meshRef.current) {
+            return;
+          }
+
+          uniforms.iTime.value = t * 0.001;
+
+          if (followMouse && mouseInfluence > 0.0) {
+            const smoothing = 0.92;
+            smoothMouseRef.current.x = smoothMouseRef.current.x * smoothing + mouseRef.current.x * (1 - smoothing);
+            smoothMouseRef.current.y = smoothMouseRef.current.y * smoothing + mouseRef.current.y * (1 - smoothing);
+            uniforms.mousePos.value = [smoothMouseRef.current.x, smoothMouseRef.current.y];
+          }
+
+          try {
+            renderer.render({ scene: mesh });
+            animationIdRef.current = requestAnimationFrame(loop);
+          } catch (error) {
+            console.warn('WebGL rendering error:', error);
+            return;
+          }
+        };
+
+        window.addEventListener('resize', updatePlacement);
+        // Force initial update with multiple attempts for mobile
+        updatePlacement();
+        setTimeout(updatePlacement, 50);
+        setTimeout(updatePlacement, 200);
+        setTimeout(() => {
+          console.log('LightRays: Animation initialized', {
+            width: containerRef.current?.clientWidth,
+            height: containerRef.current?.clientHeight,
+            canvas: rendererGl.canvas.width,
+            canvasHeight: rendererGl.canvas.height
+          });
+        }, 300);
+        animationIdRef.current = requestAnimationFrame(loop);
+
+        cleanupFunctionRef.current = () => {
+          if (animationIdRef.current) {
+            cancelAnimationFrame(animationIdRef.current);
+            animationIdRef.current = null;
+          }
+
+          window.removeEventListener('resize', updatePlacement);
+
+          if (renderer) {
+            try {
+              const canvas = renderer.gl.canvas;
+              const loseContextExt = renderer.gl.getExtension('WEBGL_lose_context');
+              if (loseContextExt) {
+                loseContextExt.loseContext();
+              }
+              if (canvas && canvas.parentNode) {
+                canvas.parentNode.removeChild(canvas);
+              }
+            } catch (error) {
+              console.warn('Error during WebGL cleanup:', error);
+            }
+          }
+
+          rendererRef.current = null;
+          uniformsRef.current = null;
+          meshRef.current = null;
+        };
+      } catch (error) {
+        console.error('Failed to initialize WebGL for LightRays:', error);
+        // Add CSS fallback on error
+        if (containerRef.current) {
+          containerRef.current.style.background = 'radial-gradient(circle at top center, rgba(0, 255, 255, 0.4), transparent 70%)';
+          containerRef.current.style.animation = 'pulse 3s ease-in-out infinite';
+        }
+      }
     };
 
     initializeWebGL();
@@ -424,9 +521,63 @@ void main() {
       mouseRef.current = { x, y };
     };
 
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!containerRef.current || !rendererRef.current) return;
+      const touch = e.touches[0] || e.changedTouches[0];
+      if (!touch) return;
+      
+      // Check if touch is on an interactive element (button, link, etc.)
+      const target = e.target as HTMLElement;
+      if (target && (
+        target.closest('a') || 
+        target.closest('button') || 
+        target.closest('[role="button"]') ||
+        target.closest('input') ||
+        target.closest('select') ||
+        target.closest('textarea')
+      )) {
+        // Don't prevent default for interactive elements
+        return;
+      }
+      
+      // Only prevent default if touch is actually on the animation container
+      const rect = containerRef.current.getBoundingClientRect();
+      const touchX = touch.clientX;
+      const touchY = touch.clientY;
+      
+      if (
+        touchX >= rect.left &&
+        touchX <= rect.right &&
+        touchY >= rect.top &&
+        touchY <= rect.bottom
+      ) {
+        // Only prevent default if touch is on the container and not on an interactive element
+        const elementAtPoint = document.elementFromPoint(touchX, touchY);
+        if (elementAtPoint && (
+          elementAtPoint.closest('a') ||
+          elementAtPoint.closest('button') ||
+          elementAtPoint.closest('[role="button"]')
+        )) {
+          return; // Don't prevent default for buttons/links
+        }
+        e.preventDefault(); // Prevent scrolling only when interacting with animation
+      }
+      
+      const x = (touchX - rect.left) / rect.width;
+      const y = (touchY - rect.top) / rect.height;
+      mouseRef.current = { x, y };
+    };
+
     if (followMouse) {
       window.addEventListener('mousemove', handleMouseMove);
-      return () => window.removeEventListener('mousemove', handleMouseMove);
+      // Add touch support for mobile devices
+      window.addEventListener('touchmove', handleTouchMove, { passive: false });
+      window.addEventListener('touchstart', handleTouchMove, { passive: false });
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('touchmove', handleTouchMove);
+        window.removeEventListener('touchstart', handleTouchMove);
+      };
     }
   }, [followMouse]);
 

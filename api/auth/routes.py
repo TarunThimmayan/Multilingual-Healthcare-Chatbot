@@ -184,10 +184,22 @@ async def login(
     """
     try:
         # Authenticate user
-        user = await auth_service.authenticate_user(
-            email=request_data.email,
-            password=request_data.password
-        )
+        try:
+            user = await auth_service.authenticate_user(
+                email=request_data.email,
+                password=request_data.password
+            )
+        except Exception as e:
+            # Check if it's a database connection error
+            error_str = str(e).lower()
+            if "getaddrinfo" in error_str or "connection" in error_str or "network" in error_str:
+                logger.error(f"Database connection error during login: {e}", exc_info=True)
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Database service is temporarily unavailable. Please try again in a moment."
+                )
+            # Re-raise other exceptions
+            raise
         
         if not user:
             raise HTTPException(
@@ -373,8 +385,8 @@ async def refresh_token(
             )
         
         # Check if token is revoked using database service
-        from ..database import service as db_service
-        token_record = await db_service.get_refresh_token(refresh_token)
+        from ..database.service import DatabaseService
+        token_record = await DatabaseService.get_refresh_token(refresh_token)
         
         if not token_record:
             raise HTTPException(

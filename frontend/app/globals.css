@@ -1,28 +1,49 @@
 @import url("katex/dist/katex.min.css");
 
+/* Tailwind CSS directives - these are valid Tailwind syntax */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 html {
   scroll-behavior: smooth;
+  height: 100%;
+  min-height: 100%;
 }
 
 html,
 body {
-  @apply h-full bg-gradient-to-br from-ocean-50 via-white to-mint-50 text-slate-800;
+  /* Remove fixed background to allow pages to set their own backgrounds */
+  background: transparent;
+  /* Default text color, can be overridden by pages */
+  color: rgb(30 41 59); /* slate-800 */
+  min-height: 100%;
 }
 
 body {
-  @apply antialiased;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 * {
-  @apply box-border;
+  box-sizing: border-box;
 }
 
+/* Selection colors that work on both light and dark backgrounds */
 ::selection {
-  @apply bg-ocean-500/20 text-ocean-900;
+  background-color: rgba(16, 185, 129, 0.3); /* emerald-500 with opacity */
+  color: rgb(255, 255, 255);
+}
+
+/* For dark backgrounds */
+.dark ::selection,
+[class*="bg-slate-9"] ::selection,
+[class*="bg-emerald-9"] ::selection,
+[class*="bg-green-9"] ::selection,
+[class*="bg-teal-9"] ::selection {
+  background-color: rgba(16, 185, 129, 0.4);
+  color: rgb(241, 245, 249); /* slate-100 */
 }
 
 /* Hide scrollbar but keep scrolling functionality */

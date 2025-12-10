@@ -273,8 +273,9 @@ export default function LandingPage() {
                 View Insights
               </NavLink>
               <Link
-                href="/auth"
-                className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500 px-3 py-1.5 text-xs font-semibold text-white shadow-[0_18px_40px_rgba(16,185,129,0.35)] transition-all hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm whitespace-nowrap"
+                href="/auth/signup"
+                className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500 px-3 py-1.5 text-xs font-semibold text-white shadow-[0_18px_40px_rgba(16,185,129,0.35)] transition-all hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm whitespace-nowrap relative z-50 touch-manipulation"
+                style={{ WebkitTapHighlightColor: 'transparent', pointerEvents: 'auto' }}
               >
                 Get Started
               </Link>

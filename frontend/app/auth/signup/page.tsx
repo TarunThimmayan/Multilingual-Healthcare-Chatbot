@@ -1,12 +1,20 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import clsx from 'clsx';
 import { Check, Loader2, ShieldCheck, Sparkles, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { setAuth, isAuthenticated, type AuthUser } from '../../../utils/auth';
 import { apiClient } from '../../../utils/api';
+import WelcomeScreen from '../../../components/WelcomeScreen';
+
+// Lazy load LightRays to improve initial render performance
+const LightRays = dynamic(() => import('../../../components/LightRays'), {
+  ssr: false,
+  loading: () => null,
+});
 
 type ToastVariant = 'success' | 'error' | 'info';
 
@@ -40,8 +48,18 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
   
   useEffect(() => {
-    if (isAuthenticated()) {
-      router.push('/');
+    // Defer auth check to not block initial render
+    const checkAuth = () => {
+      if (isAuthenticated()) {
+        router.push('/');
+      }
+    };
+
+    // Use requestIdleCallback for non-blocking execution
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      requestIdleCallback(checkAuth, { timeout: 100 });
+    } else {
+      setTimeout(checkAuth, 0);
     }
   }, [router]);
 
@@ -55,6 +73,7 @@ export default function SignUpPage() {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const toastTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const signUpButtonRef = useRef<HTMLButtonElement | null>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   const passwordScore = useMemo(() => scorePassword(signUpForm.password), [signUpForm.password]);
 
@@ -129,13 +148,16 @@ export default function SignUpPage() {
       addToast('Welcome aboard! Your profile is ready.', 'success');
       setSignUpForm({ fullName: '', email: '', password: '', confirmPassword: '' });
       
+      // Set flag to prevent immediate redirect on main page
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('justLoggedIn', 'true');
       }
       
-      setTimeout(() => {
-        router.push('/');
-      }, 500);
+      // Prefetch the main page before showing welcome animation
+      router.prefetch('/');
+      
+      // Show welcome animation
+      setShowWelcome(true);
     } catch (error: any) {
       console.error('Registration error:', error);
       const errorMessage = error.response?.data?.detail || 'Registration failed. Please try again.';
@@ -151,10 +173,43 @@ export default function SignUpPage() {
     return <Sparkles className="h-4 w-4" aria-hidden />;
   };
 
+  const [showAnimation, setShowAnimation] = useState(false);
+
+  // Defer animation loading significantly to prioritize content rendering
+  // Load animation only after page is fully interactive
+  useEffect(() => {
+    // Use requestIdleCallback for better performance, fallback to setTimeout
+    const loadAnimation = () => {
+      setShowAnimation(true);
+    };
+    
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      requestIdleCallback(loadAnimation, { timeout: 1000 });
+    } else {
+      setTimeout(loadAnimation, 500);
+    }
+  }, []);
+
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_15%,rgba(16,185,129,0.55),transparent_55%),radial-gradient(circle_at_85%_5%,rgba(34,197,94,0.4),transparent_55%),linear-gradient(180deg,rgba(2,6,23,0.92),rgba(2,6,23,0.95))]" />
-      <div className="relative z-10 px-4 py-4 sm:px-6 sm:py-6 md:px-12 md:py-10 lg:px-16">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-emerald-950 via-green-950 to-teal-950 text-slate-100">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_15%,rgba(16,185,129,0.55),transparent_55%),radial-gradient(circle_at_85%_5%,rgba(34,197,94,0.4),transparent_55%),radial-gradient(circle_at_50%_100%,rgba(16,185,129,0.35),transparent_60%),linear-gradient(180deg,rgba(5,46,22,0.95),rgba(6,78,59,0.95))]" />
+      {/* LightRays Animation Background */}
+      {showAnimation && (
+        <div className="absolute inset-0 z-0 w-full h-full pointer-events-none">
+          <LightRays
+            raysOrigin="top-center"
+            raysColor="#00ffff"
+            raysSpeed={1.5}
+            lightSpread={0.8}
+            rayLength={1.2}
+            followMouse={true}
+            mouseInfluence={0.1}
+            noiseAmount={0.1}
+            distortion={0.05}
+          />
+        </div>
+      )}
+      <div className="relative z-10 flex min-h-screen flex-col justify-center px-4 py-4 sm:px-6 sm:py-6 md:px-12 md:py-10 lg:px-16">
         <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-4 sm:gap-6 md:gap-8 lg:gap-10">
           <header className="flex w-full flex-col items-center gap-2 sm:gap-3 text-center">
             <div className="flex items-center gap-2 sm:gap-3 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 sm:px-5 sm:py-2 text-xs sm:text-sm font-semibold uppercase tracking-[0.28em] sm:tracking-[0.32em] text-teal-100 shadow-lg shadow-teal-500/10">
@@ -211,15 +266,15 @@ export default function SignUpPage() {
                   </footer>
                 </section>
 
-                <section className="relative z-10 flex w-full flex-col bg-slate-900/90 sm:bg-slate-900/80 px-4 pt-4 pb-6 sm:px-6 sm:pt-6 sm:pb-6 md:px-10 md:pt-12 md:pb-12">
+                <section className="relative z-10 flex w-full flex-col bg-emerald-500/10 sm:bg-emerald-500/10 px-4 pt-4 pb-6 sm:px-6 sm:pt-6 sm:pb-6 md:px-10 md:pt-12 md:pb-12 backdrop-blur-sm" style={{ pointerEvents: 'auto' }}>
                   <div className="mb-4 sm:mb-6 flex items-center text-slate-200">
-                    <div className="flex items-center gap-2 rounded-full border border-white/10 bg-slate-900/60 px-3 py-1.5 sm:px-4 text-[0.65rem] sm:text-xs font-semibold uppercase tracking-[0.24em] sm:tracking-[0.28em] text-teal-200/80">
+                    <div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 sm:px-4 text-[0.65rem] sm:text-xs font-semibold uppercase tracking-[0.24em] sm:tracking-[0.28em] text-teal-200/80">
                       <span className="inline-flex h-1.5 w-1.5 sm:h-2 sm:w-2 animate-pulse rounded-full bg-emerald-300" aria-hidden />
                       Create account
                     </div>
                   </div>
 
-                  <form className="space-y-3 sm:space-y-4 md:space-y-6" onSubmit={handleSignUpSubmit} noValidate>
+                  <form className="space-y-3 sm:space-y-4 md:space-y-6 relative z-10" onSubmit={handleSignUpSubmit} noValidate style={{ pointerEvents: 'auto' }}>
                     <div className="space-y-3 sm:space-y-4 md:space-y-5">
                       <FloatingField
                         id="signup-fullName"
@@ -284,11 +339,18 @@ export default function SignUpPage() {
                     </button>
                   </form>
 
-                  <div className="mt-6 sm:mt-8 flex flex-col items-center gap-2 text-center">
+                  <div className="mt-6 sm:mt-8 flex flex-col items-center gap-2 text-center relative z-30" style={{ pointerEvents: 'auto' }}>
                     <p className="text-[0.7rem] sm:text-xs text-slate-400">Your information is encrypted and stays confidential.</p>
                     <div className="text-xs sm:text-sm text-slate-200">
                       Already have an account?{' '}
-                      <Link href="/auth/login" className="font-semibold text-teal-200 transition hover:text-white">
+                      <Link 
+                        href="/auth/login" 
+                        className="font-semibold text-teal-200 transition hover:text-white relative z-30 touch-manipulation cursor-pointer"
+                        style={{ WebkitTapHighlightColor: 'transparent', pointerEvents: 'auto' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                      >
                         Log in
                       </Link>
                     </div>
@@ -301,6 +363,17 @@ export default function SignUpPage() {
       </div>
 
       <ToastContainer toasts={toasts} renderIcon={renderToastIcon} />
+      
+      {/* Welcome Animation - shown after successful signup */}
+      {showWelcome && (
+        <WelcomeScreen
+          onComplete={() => {
+            setShowWelcome(false);
+            // Navigate to main page after animation completes
+            router.push('/');
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -409,7 +482,7 @@ interface ToastContainerProps {
 
 function ToastContainer({ toasts, renderIcon }: ToastContainerProps) {
   return (
-    <div className="pointer-events-none fixed inset-x-3 bottom-4 z-50 mx-auto flex max-w-md flex-col gap-2 sm:gap-3 sm:inset-x-4 sm:bottom-6 sm:inset-x-auto sm:right-6 sm:top-6 sm:bottom-auto">
+    <div className="pointer-events-none fixed inset-x-3 top-4 z-50 mx-auto flex max-w-md flex-col gap-2 sm:gap-3 sm:inset-x-4 sm:inset-x-auto sm:right-6 sm:top-6 sm:bottom-auto pt-safe sm:pt-0" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
       {toasts.map((toast) => (
         <div
           key={toast.id}

@@ -1,28 +1,53 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import LightRays from './LightRays';
+
+// Lazy load LightRays to improve initial render performance
+const LightRays = dynamic(() => import('./LightRays'), {
+  ssr: false,
+  loading: () => null,
+});
 
 export default function HeroSection() {
+  const [showAnimation, setShowAnimation] = useState(false);
+
+  // Defer animation loading significantly to prioritize content rendering
+  useEffect(() => {
+    // Use requestIdleCallback for better performance, fallback to setTimeout
+    const loadAnimation = () => {
+      setShowAnimation(true);
+    };
+    
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      requestIdleCallback(loadAnimation, { timeout: 1000 });
+    } else {
+      setTimeout(loadAnimation, 300);
+    }
+  }, []);
+
   return (
-    <section className="relative mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-12 sm:gap-10 sm:px-6 sm:py-16 md:gap-12 md:px-8 lg:flex-row lg:items-center lg:gap-16 lg:px-10 lg:py-24 overflow-hidden">
+    <section className="relative mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-12 sm:gap-10 sm:px-6 sm:py-16 md:gap-12 md:px-8 lg:flex-row lg:items-center lg:gap-16 lg:px-10 lg:py-24 overflow-hidden min-h-[500px]">
       {/* LightRays Animation Background - covers entire section */}
-      <div className="absolute inset-0 z-0">
-        <LightRays
-          raysOrigin="top-center"
-          raysColor="#00ffff"
-          raysSpeed={1.5}
-          lightSpread={0.8}
-          rayLength={1.2}
-          followMouse={true}
-          mouseInfluence={0.1}
-          noiseAmount={0.1}
-          distortion={0.05}
-        />
-      </div>
+      {showAnimation && (
+        <div className="absolute inset-0 z-0 w-full h-full pointer-events-none">
+          <LightRays
+            raysOrigin="top-center"
+            raysColor="#00ffff"
+            raysSpeed={1.5}
+            lightSpread={0.8}
+            rayLength={1.2}
+            followMouse={true}
+            mouseInfluence={0.1}
+            noiseAmount={0.1}
+            distortion={0.05}
+          />
+        </div>
+      )}
       
       {/* Content with relative z-index to appear above animation */}
-      <div className="relative z-10 flex-1 space-y-6 sm:space-y-8">
+      <div className="relative z-10 flex-1 space-y-6 sm:space-y-8" style={{ pointerEvents: 'auto' }}>
         <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1.5 text-xs font-semibold text-emerald-200 shadow-[0_12px_35px_rgba(16,185,129,0.25)] sm:gap-2 sm:px-4 sm:py-2 sm:text-sm">
           <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-emerald-300 sm:h-2.5 sm:w-2.5" aria-hidden />
           Always-on Care Navigation
@@ -39,8 +64,9 @@ export default function HeroSection() {
         </div>
         <div className="flex flex-wrap items-center gap-3 sm:gap-4">
           <Link
-            href="/auth"
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500 px-5 py-2.5 text-xs font-semibold text-white shadow-[0_22px_45px_rgba(16,185,129,0.35)] transition hover:scale-[1.04] sm:px-6 sm:py-3 sm:text-sm"
+            href="/auth/signup"
+            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500 px-5 py-2.5 text-xs font-semibold text-white shadow-[0_22px_45px_rgba(16,185,129,0.35)] transition hover:scale-[1.04] sm:px-6 sm:py-3 sm:text-sm relative z-20 touch-manipulation"
+            style={{ WebkitTapHighlightColor: 'transparent', pointerEvents: 'auto' }}
           >
             Get Started
           </Link>

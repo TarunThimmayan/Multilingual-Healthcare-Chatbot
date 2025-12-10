@@ -366,6 +366,15 @@ export default function Home({ initialSessionId }: HomeProps = {}) {
     const checkAuthAndRedirect = async () => {
       if (typeof window === 'undefined') return;
 
+      // Check if user just logged in - give them time to settle
+      const justLoggedIn = sessionStorage.getItem('justLoggedIn') === 'true';
+      if (justLoggedIn) {
+        // Clear the flag immediately
+        sessionStorage.removeItem('justLoggedIn');
+        // Wait a bit for auth state to settle, especially on mobile
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
       // FIRST: Check IP address as fast as possible (lightweight endpoint with caching)
       // This endpoint has a 500ms timeout, so it should respond quickly
       let isKnownIp = false;
@@ -396,6 +405,34 @@ export default function Home({ initialSessionId }: HomeProps = {}) {
 
       // Check if we have any tokens stored (even if expired)
       const hasTokens = localStorage.getItem('health_companion_auth') !== null;
+      
+      // If user just logged in and we have tokens, be more lenient
+      // Don't redirect immediately if tokens exist
+      if (justLoggedIn && hasTokens) {
+        // Give the API call more time to succeed
+        try {
+          const response = await Promise.race([
+            apiClient.get('/auth/me'),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Auth check timeout')), 5000)
+            )
+          ]) as any;
+          
+          if (response.data?.id) {
+            setIsAuthChecked(true);
+            updateActivity();
+            setCustomerId(response.data.id);
+            return;
+          }
+        } catch (err: any) {
+          // If API call fails but we have tokens, still allow access
+          // The tokens might be valid but API is slow
+          console.warn('Auth check failed after login, but tokens exist:', err);
+          setIsAuthChecked(true);
+          updateActivity();
+          return;
+        }
+      }
 
       // Case 1: New user (no tokens, new IP) → redirect to /landing
       if (!hasTokens && !isKnownIp) {
@@ -484,6 +521,33 @@ export default function Home({ initialSessionId }: HomeProps = {}) {
             return;
           }
         } catch (err: any) {
+          // If /auth/me fails, check if user just logged in
+          const justLoggedInFlag = sessionStorage.getItem('justLoggedIn') === 'true';
+          
+          // If user just logged in, be more lenient - don't redirect immediately
+          // The API might be slow or the session might not be fully established yet
+          if (justLoggedInFlag) {
+            console.warn('Auth check failed after login, but allowing access:', err);
+            // Clear the flag
+            sessionStorage.removeItem('justLoggedIn');
+            // Still set auth as checked to allow access
+            setIsAuthChecked(true);
+            updateActivity();
+            // Try to get user info from localStorage as fallback
+            const userInfoStr = localStorage.getItem('user_info');
+            if (userInfoStr) {
+              try {
+                const cachedData = JSON.parse(userInfoStr);
+                if (cachedData?.data?.id) {
+                  setCustomerId(cachedData.data.id);
+                }
+              } catch (e) {
+                console.warn('Failed to parse cached user info:', e);
+              }
+            }
+            return;
+          }
+          
           // If /auth/me fails (401 or other error), tokens are invalid
           // Case 2: Known IP but invalid tokens → flush tokens and redirect to /auth
           console.warn('Token validation failed:', err);
